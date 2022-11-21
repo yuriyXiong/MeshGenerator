@@ -1,10 +1,10 @@
-function [Node,Element,interfaceData] = PolyMesher_interfaceline(Domain,NElem,MaxIter,P)
-% example: 
-% [node, elem, interface] = PolyMesher_interfaceline(@RectangleDomain, 100,100);
-% The Domain must be symmetric about y=0.
-% In fact, the partition is mirrored with respect to y=0.
-% We can only set the linear interface as the line y=0.
-% Y.Xiong at 11.Nov.2022
+function [Node,Element] = PolyMesher(Domain,NElem,MaxIter,P)
+% exxample :
+% [node, elem] = PolyMesher(@MbbDomain,100,100);
+% [node, elem] = PolyMesher(@RectangleDomain,100,100);
+% You can change Area by modifing code in some Domain.
+
+
 
 if ~exist('P','var'), P=PolyMshr_RndPtSet(NElem,Domain); end
 NElem = size(P,1);
@@ -14,8 +14,8 @@ Area = (BdBox(2)-BdBox(1))*(BdBox(4)-BdBox(3));
 Pc = P; figure;
 while(It<=MaxIter && Err>Tol)
   Alpha = c*sqrt(Area/NElem);
- % P = Pc; %Lloyd's update
-  P = [Pc(1:NElem/2,:);[Pc(1:NElem/2,1),-Pc(1:NElem/2,2)]];
+  P = Pc; %Lloyd's update
+  % P = [Pc(1:NElem/2,:);[Pc(1:NElem/2,1),-Pc(1:NElem/2,2)]]; Mirror interface
   R_P = PolyMshr_Rflct(P,NElem,Domain,Alpha);   %Generate the reflections
   [P,R_P] = PolyMshr_FixedPoints(P,R_P,PFix); % Fixed Points 
   [Node,Element] = voronoin([P;R_P]);           %Construct Voronoi diagram
@@ -23,26 +23,13 @@ while(It<=MaxIter && Err>Tol)
   Area = sum(abs(A));
   Err = sqrt(sum((A.^2).*sum((Pc-P).*(Pc-P),2)))*NElem/Area^1.5;
   fprintf('It: %3d   Error: %1.3e\n',It,Err); It=It+1;
-  if NElem<=2000, PolyMshr_PlotMsh(Node,Element,NElem); end
+  if NElem<=2000, PolyMshr_PlotMsh(Node,Element,NElem); end; 
 end
 [Node,Element] = PolyMshr_ExtrNds(NElem,Node,Element);  %Extract node list
 [Node,Element] = PolyMshr_CllpsEdgs(Node,Element,0.1);  %Remove small edges
 [Node,Element] = PolyMshr_RsqsNds(Node,Element);        %Reoder Nodes
 BC=Domain('BC',{Node,Element}); Supp=BC{1}; Load=BC{2}; %Recover BC arrays
 PolyMshr_PlotMsh(Node,Element,NElem,Supp,Load);         %Plot mesh and BCs
-%% generate interfacedata
-elem1 = Element(1:NElem/2);
-elem2 = Element(NElem/2+1:end);
-bdStruct1 = setboundary(Node,elem1);
-bdStruct2 = setboundary(Node,elem2);
-bdnode = intersect(bdStruct1.bdNodeIdx,bdStruct2.bdNodeIdx);
-bdedge = intersect(bdStruct1.bdEdge, bdStruct2.bdEdge(:,[2,1]),'rows');
-interfaceData.nodeIdx = bdnode; % node index
-interfaceData.edge = bdedge;
-
-
-
-
 %------------------------------------------------- GENERATE RANDOM POINTSET
 function P = PolyMshr_RndPtSet(NElem,Domain)
 P=zeros(NElem,2); BdBox=Domain('BdBox'); Ctr=0;
@@ -50,8 +37,8 @@ while Ctr<NElem
   Y(:,1) = (BdBox(2)-BdBox(1))*rand(NElem,1)+BdBox(1);
   Y(:,2) = (BdBox(4)-BdBox(3))*rand(NElem,1)+BdBox(3);
   d = Domain('Dist',Y);
-  %I = find(d(:,end)<0);                 %Index of seeds inside the domain
-  I = find(d(:,end)<0 & Y(:,2)>0);  	% interface Y.Xiong modify at 2022.11.12
+  I = find(d(:,end)<0);                 %Index of seeds inside the domain
+  % I = find(d(:,end)<0 & Y(:,2)>0);  	% interface Y.Xiong modify at 2022.11.12
   NumAdded = min(NElem-Ctr,length(I));  %Number of seeds that can be added
   P(Ctr+1:Ctr+NumAdded,:) = Y(I(1:NumAdded),:);
   Ctr = Ctr+NumAdded;
@@ -103,7 +90,7 @@ function [Node0,Element0] = PolyMshr_CllpsEdgs(Node0,Element0,Tol)
 while(true)
   cEdge = [];
   for el=1:size(Element0,1)
-    if size(Element0{el},2)<4, continue; end  %Cannot collapse triangles
+    if size(Element0{el},2)<4, continue; end;  %Cannot collapse triangles
     vx=Node0(Element0{el},1); vy=Node0(Element0{el},2); nv=length(vx);
     beta = atan2(vy-sum(vy)/nv, vx-sum(vx)/nv);
     beta = mod(beta([2:end 1]) -beta,2*pi);
@@ -165,7 +152,7 @@ if exist('Load','var')&&~isempty(Load) %Plot Load BC if specified
 end
 %-------------------------------------------------------------------------%
 %------------------------ PolyMesher - History ---------------------------%
-% version: 1.2 (Nov22)
+% version: 1.1 (Aug13)
 %
 % history: Created:    8-Jan-12   Anderson Pereira & Cameron Talischi
 %          Supervised by:         Ivan Menezes & Glaucio Paulino
@@ -179,6 +166,5 @@ end
 %          Fixed the changed behaviour of the unique function in
 %          Matlab 2013a
 % 	   
-%          Modified:  12-Nov-22    Y.Xiong modified function to generate 
-%          interface of line-type, and added data of interface
+%	   Modified:  22-Nov-1    interface-line
 %-------------------------------------------------------------------------%
