@@ -1,11 +1,12 @@
 # MeshGenerator：A Mesh generation package in MATLAB
-MeshGenerator is a matlab software package used to generate various meshes in 2D such as triangles, squared, Voronoi polygons, even non-convex polygons, etc. It can be used for finite element method and virtual element method. The code is based on iFEM and mVEM(Thanks to Professor Chen Long of UCL and Terenceyuyue of SJTU), and I have mainly done some original work in generating linear and closed interface meshes.
+MeshGenerator is a matlab software package used to generate various meshes in 2D such as triangles, squared, Voronoi polygons, even non-convex polygons, etc. It can be used for finite element method and virtual element method. The code is based on iFEM and mVEM (Thanks to Professor Chen Long of UCL and Terenceyuyue of SJTU) , and I have mainly done some original work in generating linear and closed interface meshes.
 
 If you need to communicate with me, you can contact me via email: 202121511185@smail.xtu.edu.cn
 
 ## installation
 Add the path to MeshGenerator into the path library of MATLAB:
   1.Graphical interface. Click File -> Set Path -> Add with Subfolders and chose the directory where the package iFEM is stored.
+  
   2.Command window. Go to the directory of MeshGenerator and run setpath
   
 ## NormalMesh
