@@ -5,6 +5,7 @@ If you need to communicate with me, you can contact me via email: 202121511185@s
 
 ## installation
 Add the path to MeshGenerator into the path library of MATLAB:
+
   1.Graphical interface. Click File -> Set Path -> Add with Subfolders and chose the directory where the package iFEM is stored.
   
   2.Command window. Go to the directory of MeshGenerator and run setpath
