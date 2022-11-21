@@ -28,5 +28,6 @@ Add the path to MeshGenerator into the path library of MATLAB:
   You can read the annotation of distmesh2d.m to generator Mesh of domains with very many shapes,even the grid with holes.
   
 ## InterfacePolymesher
-  This is my main original work. I created programs that can generate linear interfaces and programs with closed interfaces. See the specific annotation of example in the code for the main usage.
+  This is my main original work. I created programs that can generate linear and closed interfaces. See the specific annotation of example in the interfaceline.m and interfacecolosed.m for the main usage.
+
 
