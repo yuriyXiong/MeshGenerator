@@ -1,4 +1,4 @@
-function [node, elem, node1, elem1, node2, elem2,interfaceData] = interfaceline(g1,g2,h)
+function [node, elem, node1, elem1, node22, elem2,interfaceData] = interfaceline(g1,g2,h)
 %% Y.Xiong created at 17.Nov.2022
 %% You can get a mesh of interface.
 % example1:
@@ -25,10 +25,11 @@ if isempty(g1)
     g1(6,:) = 1;   % label of subdomain on the left
     g1(7,:) = 0;   % label of subdomain on the right
 end
-[p1,e1,t1] = initmesh(g1,'hmax',h,'Hgrad',1.1);
+[p1,~,t1] = initmesh(g1,'hmax',h,'Hgrad',1.1);
 pp1 = p1';   tt1 = t1(1:3,:)';
 [node1,elem1] = dualMesh(pp1,tt1);
-    
+bd1 = setboundary(node1,elem1);
+
 % Triangle Area
 if isempty(g2)
     g2 = zeros(10,3);
@@ -41,17 +42,17 @@ if isempty(g2)
     g2(7,:) = 0;   % label of subdomain on the right
 end
 
-[p2,e2,t2] = initmesh(g2,'hmax',h,'Hgrad',1.1);
+[p2,~,t2] = initmesh(g2,'hmax',h,'Hgrad',1.1);
 pp2 = p2';   tt2 = t2(1:3,:)';
 [node2,elem2] = dualMesh(pp2,tt2);
-
-
+node22 = node2;
+bd2 = setboundary(node2,elem2);
 
 %% Merge subdivions
 % get connection number of the second mesh
 N1 = size(node1,1);  N2 = size(node2,1);
 Idx2 = (1:N2)+N1;
-v1 = unique(e1(1:2,:));  v2 = unique(e2(1:2,:));
+v1 = unique(bd1.bdNodeIdx);  v2 = unique(bd2.bdNodeIdx);
 for i = (v1(:))'  % only loop for the nodes on the boundaries of both domains
     for j = (v2(:))'
         distance = norm(node1(i,:) - node2(j,:));
@@ -70,12 +71,15 @@ elem2 = cellfun(@(index) Idx2(index), elem2, 'UniformOutput',false);
 node = [node1; node2];
 elem = vertcat(elem1,elem2);
 
+
+
 %% interfacedata
 bdStruct1 = setboundary(node,elem1);
 bdStruct2 = setboundary(node,elem2);
-bdnode = intersect(bdStruct1.bdNodeIdx,bdStruct2.bdNodeIdx);
-
-interfaceData.nodeIdx = bdnode; % node index
+bdnodeIdx = intersect(bdStruct1.bdNodeIdx,bdStruct2.bdNodeIdx);
+bdnode = node(bdnodeIdx,:);
+interfaceData.nodeIdx = bdnodeIdx; % node index
+interfaceData.node = bdnode;
 
 
 %% plot
@@ -95,5 +99,4 @@ subplot(1,2,2);
 showmesh(node,elem);
 
 end
-
 
