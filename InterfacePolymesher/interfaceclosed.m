@@ -1,4 +1,4 @@
-function [node,elem,node1,elem1,node2,elem2] = interfaceclosed(g1,g2,h)
+function [node,elem,node1,elem1,node22,elem2,interfaceData] = interfaceclosed(g1,g2,h)
 %interfacePolyMesher Generate interface-fitted polygonal mesh for interface problems
 %%  Example-1
 %    [node,elem] = interfacePolyMesher(g1,g2)
@@ -12,7 +12,7 @@ function [node,elem,node1,elem1,node2,elem2] = interfaceclosed(g1,g2,h)
 %% Example-2
 % g1 = rectangleDomain(-1,1,-1,1);
 % g2 = rectangleDomain(-0.5,0.5,-0.5,0.5);
-% [node,elem,node1,elem1,node2,elem2] = interfaceclosed(g1,g2,0.5);
+% [node,elem,node1,elem1,node2,elem2,interfaceData] = interfaceclosed(g1,g2,0.5);
 
 % Copyright (C)  Terence Yu
 % Y.Xiong modified at 21.Nov.2022.
@@ -58,6 +58,7 @@ g(1:nr2,nc1+1:ncol) = g2;
 
 pp1 = p';   tt1 = t(1:3,:)';
 [node1,elem1] = dualMesh(pp1,tt1);
+bd1 = setboundary(node1,elem1);
 
 %% Mesh of Domain 2
 g2(6,:) = 1;  g2(7,:) = 0;  % modify the orientation
@@ -66,12 +67,14 @@ g = g2;
 
 pp2 = p';   tt2 = t(1:3,:)';
 [node2,elem2] = dualMesh(pp2,tt2);
+node22 = node2;
+bd2 = setboundary(node2,elem2);
 
 %% Merge subdivions
 % get connection number of the second mesh
 N1 = size(node1,1);  N2 = size(node2,1);
 Idx2 = (1:N2)+N1;
-v1 = unique(e1(1:2,:));  v2 = unique(e2(1:2,:));
+v1 = unique(bd1.bdNodeIdx);  v2 = unique(bd2.bdNodeIdx);
 for i = (v1(:))'  % only loop for the nodes on the boundaries of both domains
     for j = (v2(:))'
         distance = norm(node1(i,:) - node2(j,:));
@@ -88,6 +91,16 @@ elem2 = cellfun(@(index) Idx2(index), elem2, 'UniformOutput',false);
 % merge
 node = [node1; node2];
 elem = vertcat(elem1,elem2);
+
+
+%% interfacedata
+bdStruct1 = setboundary(node,elem1);
+bdStruct2 = setboundary(node,elem2);
+bdnodeIdx = intersect(bdStruct1.bdNodeIdx,bdStruct2.bdNodeIdx);
+bdnode = node(bdnodeIdx,:);
+interfaceData.nodeIdx = bdnodeIdx; % node index
+interfaceData.node = bdnode;
+
 
 %% plot the triangle and polygon
 options.facecolor = 'y';
